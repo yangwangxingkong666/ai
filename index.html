@@ -64,62 +64,174 @@
     }
     ::-webkit-scrollbar { width: 0; }
     input:focus { outline: none; }
+
+    /* 密码弹窗动画 */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.5s ease; }
+    .overlay-fade-out {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
   </style>
 </head>
 <body class="flex flex-col items-center px-4 py-6 select-none">
 
-  <!-- 主卡片 -->
-  <div class="card w-full max-w-md flex flex-col" style="min-height: 88vh;">
+  <!-- ========== 密码验证弹窗 ========== -->
+  <div id="authOverlay" class="fixed inset-0 z-50 flex items-center justify-center"
+       style="background: linear-gradient(135deg, #e8f0fe 0%, #f3e8ff 50%, #fce4ec 100%);">
+    <div class="w-full max-w-xs mx-4">
+      <div class="card px-6 py-8 text-center">
+        <!-- 锁图标 -->
+        <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-indigo-50 flex items-center justify-center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h2 class="text-lg font-bold text-slate-800 mb-1">需要密码</h2>
+        <p class="text-xs text-slate-400 mb-5">请输入密码以访问记事本</p>
 
-    <!-- 头部 -->
-    <div class="px-5 pt-5 pb-4">
-      <h1 class="text-2xl font-bold text-slate-800 tracking-tight" id="dateDisplay"></h1>
-      <div class="flex items-center gap-2 mt-2">
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-500" id="doneCount">✓ 0</span>
-        <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-500" id="taskCount">共 0 条</span>
-      </div>
-    </div>
-
-    <!-- 记录列表 -->
-    <div class="flex-1 overflow-y-auto px-4 py-2 space-y-1" id="listContainer"
-         style="max-height: calc(88vh - 200px); min-height: 0;">
-      <!-- 空状态 -->
-      <div id="emptyState" class="flex flex-col items-center justify-center py-16 text-center">
-        <div class="text-5xl mb-4">📝</div>
-        <p class="text-slate-400 text-sm">还没有记录</p>
-        <p class="text-slate-300 text-xs mt-1">在下方输入并回车添加</p>
-      </div>
-    </div>
-
-    <!-- 底部输入区 -->
-    <div class="px-4 py-3 border-t border-slate-100/60 bg-white/40 rounded-b-2xl">
-      <div class="flex items-center gap-3">
+        <!-- 密码输入 -->
         <input
-          type="text"
-          id="inputBox"
-          placeholder="写点什么…"
+          type="password"
+          id="pwdInput"
+          placeholder="输入密码"
           autocomplete="off"
-          class="flex-1 bg-slate-50/80 rounded-2xl px-4 py-3.5 text-slate-700 text-base placeholder-slate-400 border border-slate-200/60 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50 transition-all"
+          class="w-full bg-slate-50 rounded-xl px-4 py-3 text-slate-700 text-base text-center placeholder-slate-400 border border-slate-200 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50 transition-all mb-3"
         >
+        <p id="pwdError" class="text-xs text-rose-500 mb-3 hidden">密码错误，请重试</p>
         <button
-          id="addBtn"
-          class="shrink-0 w-12 h-12 rounded-2xl bg-indigo-500 text-white font-bold text-xl flex items-center justify-center active:scale-90 active:bg-indigo-600 transition-all shadow-lg shadow-indigo-200"
-        >+</button>
+          id="pwdBtn"
+          class="w-full py-3 rounded-xl bg-indigo-500 text-white font-semibold text-base active:scale-95 active:bg-indigo-600 transition-all shadow-lg shadow-indigo-200"
+        >解锁</button>
+
+        <!-- 默认密码提示 -->
+        <p class="text-xs text-slate-300 mt-4">默认密码：<span class="text-indigo-400 font-medium">123456</span></p>
       </div>
     </div>
+  </div>
 
+  <!-- ========== 主应用（初始隐藏） ========== -->
+  <div id="appContent" class="w-full max-w-md hidden flex flex-col" style="min-height: 88vh;">
+    <!-- 主卡片 -->
+    <div class="card flex flex-col flex-1">
+
+      <!-- 头部 -->
+      <div class="px-5 pt-5 pb-4">
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight" id="dateDisplay"></h1>
+        <div class="flex items-center gap-2 mt-2">
+          <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-500" id="doneCount">✓ 0</span>
+          <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-500" id="taskCount">共 0 条</span>
+        </div>
+      </div>
+
+      <!-- 记录列表 -->
+      <div class="flex-1 overflow-y-auto px-4 py-2 space-y-1" id="listContainer"
+           style="max-height: calc(88vh - 200px); min-height: 0;">
+        <!-- 空状态 -->
+        <div id="emptyState" class="flex flex-col items-center justify-center py-16 text-center">
+          <div class="text-5xl mb-4">📝</div>
+          <p class="text-slate-400 text-sm">还没有记录</p>
+          <p class="text-slate-300 text-xs mt-1">在下方输入并回车添加</p>
+        </div>
+      </div>
+
+      <!-- 底部输入区 -->
+      <div class="px-4 py-3 border-t border-slate-100/60 bg-white/40 rounded-b-2xl">
+        <div class="flex items-center gap-3">
+          <input
+            type="text"
+            id="inputBox"
+            placeholder="写点什么…"
+            autocomplete="off"
+            class="flex-1 bg-slate-50/80 rounded-2xl px-4 py-3.5 text-slate-700 text-base placeholder-slate-400 border border-slate-200/60 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50 transition-all"
+          >
+          <button
+            id="addBtn"
+            class="shrink-0 w-12 h-12 rounded-2xl bg-indigo-500 text-white font-bold text-xl flex items-center justify-center active:scale-90 active:bg-indigo-600 transition-all shadow-lg shadow-indigo-200"
+          >+</button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
 <script>
 (() => {
-  // ── DOM 引用 ──────────────────────────────────
+  // ═══════════════════════════════════════════════
+  //  密码验证
+  // ═══════════════════════════════════════════════
+  const DEFAULT_PWD = '123456';
+  const PWD_KEY = 'memo_password';
+
+  // 首次使用：存储默认密码
+  if (!localStorage.getItem(PWD_KEY)) {
+    localStorage.setItem(PWD_KEY, DEFAULT_PWD);
+  }
+
+  const storedPwd = localStorage.getItem(PWD_KEY);
+
+  const overlay    = document.getElementById('authOverlay');
+  const pwdInput   = document.getElementById('pwdInput');
+  const pwdBtn     = document.getElementById('pwdBtn');
+  const pwdError   = document.getElementById('pwdError');
+  const appContent = document.getElementById('appContent');
+
+  // 已通过验证（本次会话）则跳过
+  if (sessionStorage.getItem('memo_authed') === '1') {
+    overlay.style.display = 'none';
+    appContent.classList.remove('hidden');
+    appContent.classList.add('flex');
+  } else {
+    appContent.classList.add('hidden');
+    appContent.classList.remove('flex');
+  }
+
+  function doUnlock() {
+    const input = pwdInput.value.trim();
+    if (input === storedPwd) {
+      sessionStorage.setItem('memo_authed', '1');
+      overlay.classList.add('overlay-fade-out');
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 350);
+      appContent.classList.remove('hidden');
+      appContent.classList.add('flex');
+    } else {
+      pwdError.classList.remove('hidden');
+      overlay.querySelector('.card')?.classList.add('shake');
+      setTimeout(() => {
+        overlay.querySelector('.card')?.classList.remove('shake');
+      }, 500);
+      pwdInput.value = '';
+      pwdInput.focus();
+    }
+  }
+
+  pwdBtn.addEventListener('click', doUnlock);
+  pwdInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      doUnlock();
+    }
+  });
+
+  // ═══════════════════════════════════════════════
+  //  记事本核心逻辑
+  // ═══════════════════════════════════════════════
   const dateEl   = document.getElementById('dateDisplay');
   const countEl  = document.getElementById('taskCount');
   const listEl   = document.getElementById('listContainer');
   const inputEl  = document.getElementById('inputBox');
   const addBtn   = document.getElementById('addBtn');
 
-  // ── 数据存储 ──────────────────────────────────
   const KEY = 'memo_records';
 
   function load() {
@@ -130,9 +242,8 @@
     localStorage.setItem(KEY, JSON.stringify(data));
   }
 
-  let records = load(); // [{ id, text, done, time }]
+  let records = load();
 
-  // ── 今日日期 ──────────────────────────────────
   function setDate() {
     const wd = ['日','一','二','三','四','五','六'];
     const now = new Date();
@@ -143,17 +254,14 @@
     dateEl.textContent = `${y}年${m}月${d}日 星期${w}`;
   }
 
-  // ── 时间戳 ────────────────────────────────────
   function nowTime() {
     const t = new Date();
     return `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`;
   }
 
-  // ── 渲染列表 ──────────────────────────────────
   function render() {
     listEl.innerHTML = '';
 
-    // 空状态占位
     const empty = document.createElement('div');
     empty.id = 'emptyState';
     empty.className = 'flex flex-col items-center justify-center py-16 text-center';
@@ -167,7 +275,6 @@
       div.className = 'record-row flex items-center gap-3 py-3 px-3 group';
       if (r.done) div.classList.add('done-row');
 
-      // 自定义勾选圆圈（带动画）
       const check = document.createElement('div');
       check.className = 'check-circle';
       if (r.done) check.classList.add('done');
@@ -180,7 +287,6 @@
         render();
       });
 
-      // 内容文本（点击也切换完成）
       const textSpan = document.createElement('span');
       textSpan.className = 'record-text flex-1 text-sm text-slate-700 break-all cursor-pointer font-medium';
       textSpan.textContent = r.text;
@@ -192,12 +298,10 @@
         render();
       });
 
-      // 时间戳
       const timeSpan = document.createElement('span');
       timeSpan.className = 'text-xs text-slate-400 shrink-0 tabular-nums';
       timeSpan.textContent = r.time;
 
-      // 删除按钮
       const delBtn = document.createElement('button');
       delBtn.className = 'shrink-0 w-7 h-7 rounded-full text-slate-300 hover:text-rose-400 hover:bg-rose-50 active:text-rose-500 active:bg-rose-100 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-all';
       delBtn.textContent = '✕';
@@ -220,7 +324,6 @@
     document.getElementById('doneCount').textContent = `✓ ${doneC}`;
   }
 
-  // ── 添加记录 ──────────────────────────────────
   function addRecord() {
     const text = inputEl.value.trim();
     if (!text) return;
@@ -231,7 +334,6 @@
     inputEl.blur();
   }
 
-  // ── 事件绑定 ──────────────────────────────────
   inputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -240,7 +342,6 @@
   });
   addBtn.addEventListener('click', addRecord);
 
-  // ── 初始化 ────────────────────────────────────
   setDate();
   render();
 })();
