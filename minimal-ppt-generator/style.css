@@ -1,0 +1,258 @@
+/* =============================================
+   极简 PPT 生成器 — 四主题 + 卡片美学
+   ============================================= */
+
+/* ---------- 主题: 极简原白 (默认) ---------- */
+:root,
+body.theme-minimal-white {
+  --bg-primary: #f5f5f5;
+  --panel-bg: #ffffff;
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --slide-bg: #ffffff;
+  --border-color: #e5e7eb;
+  --text-main: #111827;
+  --text-secondary: #6b7280;
+  --text-body: #4b5563;
+  --text-tertiary: #d1d5db;
+  --accent-color: #4F46E5;
+  --accent-light: #818CF8;
+  --shadow-color: rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- 主题: 极客暗黑 ---------- */
+body.theme-cyber-dark {
+  --bg-primary: #0f0f1a;
+  --panel-bg: #1a1a2e;
+  --header-bg: rgba(26, 26, 46, 0.9);
+  --slide-bg: #16213e;
+  --border-color: #2a2a4a;
+  --text-main: #f0f0f8;
+  --text-secondary: #a0a0c0;
+  --text-body: #c8c8e0;
+  --text-tertiary: #4a4a6a;
+  --accent-color: #38BDF8;
+  --accent-light: #7DD3FC;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- 主题: 莫兰迪棕 ---------- */
+body.theme-morandi-warm {
+  --bg-primary: #ede4da;
+  --panel-bg: #faf6f0;
+  --header-bg: rgba(250, 246, 240, 0.9);
+  --slide-bg: #faf6f0;
+  --border-color: #d4c5b9;
+  --text-main: #3d3226;
+  --text-secondary: #8b7355;
+  --text-body: #5c4a3a;
+  --text-tertiary: #c4b5a5;
+  --accent-color: #A0897B;
+  --accent-light: #c4b5a5;
+  --shadow-color: rgba(139, 115, 85, 0.08);
+}
+
+/* ---------- 主题: 森系青绿 ---------- */
+body.theme-forest-zen {
+  --bg-primary: #e8efe4;
+  --panel-bg: #f4f9f2;
+  --header-bg: rgba(244, 249, 242, 0.9);
+  --slide-bg: #f4f9f2;
+  --border-color: #c8d6c0;
+  --text-main: #1e3a2f;
+  --text-secondary: #5a7a5a;
+  --text-body: #3d5a3d;
+  --text-tertiary: #b0c8a8;
+  --accent-color: #4A7C59;
+  --accent-light: #8fbc8f;
+  --shadow-color: rgba(74, 124, 89, 0.06);
+}
+
+/* ---------- 全局 ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-main);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 999px;
+}
+
+/* ---------- Textarea ---------- */
+#markdownInput::selection {
+  background: var(--accent-color);
+  color: #fff;
+  opacity: 0.3;
+}
+
+/* ---------- 主题按钮 ---------- */
+.theme-btn {
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+  background: var(--slide-bg);
+}
+.theme-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--text-main);
+}
+.theme-btn.active {
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+  background: color-mix(in srgb, var(--accent-color) 8%, transparent);
+}
+
+/* ---------- 幻灯片视口卡片 ---------- */
+#slideViewport {
+  transition: background 0.5s ease, transform 0.3s ease, box-shadow 0.5s ease;
+}
+#slideViewport:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 60px var(--shadow-color) !important;
+}
+
+/* ---------- 幻灯片内容偏移动画 ---------- */
+#slideContent {
+  opacity: 1;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+#slideContent.slide-exit {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+/* ---------- 列表样式（预览卡片内） ---------- */
+#slideBody ul {
+  list-style: none;
+  padding-left: 0;
+}
+#slideBody ul li {
+  position: relative;
+  padding-left: 1.6rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.8;
+}
+#slideBody ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  opacity: 0.55;
+}
+#slideBody ol {
+  counter-reset: ol-counter;
+  padding-left: 0;
+  list-style: none;
+}
+#slideBody ol li {
+  counter-increment: ol-counter;
+  position: relative;
+  padding-left: 1.6rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.8;
+}
+#slideBody ol li::before {
+  content: counter(ol-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accent-color);
+  opacity: 0.7;
+}
+
+#slideBody blockquote {
+  border-left: 3px solid var(--accent-color);
+  padding-left: 1.2rem;
+  margin: 0.8rem 0;
+  font-style: italic;
+  opacity: 0.75;
+  font-size: 1rem;
+}
+
+#slideBody code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: var(--border-color);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+#slideBody pre {
+  background: var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.6rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  overflow-x: auto;
+}
+
+#slideBody pre code {
+  background: none;
+  padding: 0;
+}
+
+#slideBody strong {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+#slideBody em {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+#slideBody hr {
+  border: none;
+  height: 1px;
+  background: var(--border-color);
+  margin: 1rem 0;
+  width: 30%;
+}
+
+/* ---------- AI 弹窗输入焦点 ---------- */
+#aiModal input:focus {
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color) 15%, transparent);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1024px) {
+  main {
+    flex-direction: column !important;
+  }
+  main > aside {
+    width: 100% !important;
+    min-width: unset !important;
+    height: 50% !important;
+  }
+  main > section {
+    height: 50% !important;
+  }
+  #slideContent {
+    padding: 2rem !important;
+  }
+  #slideTitle {
+    font-size: 1.8rem !important;
+  }
+}
